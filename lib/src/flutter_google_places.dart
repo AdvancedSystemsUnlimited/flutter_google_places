@@ -1,6 +1,8 @@
 library flutter_google_places.src;
 
 import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_webservice/places.dart';
@@ -169,8 +171,6 @@ class _PlacesAutocompleteOverlayState extends PlacesAutocompleteState {
   Icon get _iconBack => Theme.of(context).platform == TargetPlatform.iOS
       ? Icon(Icons.arrow_back_ios): Icon(Icons.arrow_back);
 
-
-
   Widget _textField(BuildContext context) => TextField(
         controller: _queryTextController,
         autofocus: true,
@@ -323,14 +323,41 @@ class PredictionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(Icons.location_on),
-      title: Text(prediction.description),
+      leading: checkIfThisIsAddress(prediction.description)? Icon(Icons.location_on):Icon(Icons.location_off)
+          ,
+      title: Text(prediction.description)
+          , 
       onTap: () {
         if (onTap != null) {
+          
           onTap(prediction);
         }
       },
+      enabled: checkIfThisIsAddress(prediction.description),
     );
+  }
+
+  bool checkIfThisIsAddress(String description) {
+    int hasNumber = description.indexOf(new RegExp(r'[0-9]'));
+    if (hasNumber == -1) {
+      return false;
+    }
+
+    try {
+      var splitString = description.split(' ');
+      String first = splitString[0];
+      String second = description.replaceFirst(first, '');
+      int firstInteger = int.parse(first);
+
+      if ((firstInteger > -1) && (second != '')) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+ 
   }
 }
 
@@ -378,7 +405,7 @@ abstract class PlacesAutocompleteState extends State<PlacesAutocompleteWidget> {
         types: widget.types,
         components: widget.components,
         strictbounds: widget.strictbounds,
-        region: widget.region,
+                region: widget.region,
       );
 
       if (res.errorMessage?.isNotEmpty == true ||
@@ -458,7 +485,7 @@ class PlacesAutocomplete {
         location: location,
         radius: radius,
         strictbounds: strictbounds,
-        region: region,
+         region: region,
         offset: offset,
         hint: hint,
         logo: logo,
